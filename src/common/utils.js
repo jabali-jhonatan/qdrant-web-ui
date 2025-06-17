@@ -1,4 +1,10 @@
 export const getBaseURL = function () {
+  // Check for environment variable first (highest precedence)
+  if (process.env.REACT_APP_QDRANT_BASE_URL) {
+    return process.env.REACT_APP_QDRANT_BASE_URL;
+  }
+
+  // Fall back to existing logic
   const url = new URL(window.location.href);
   const pathname = url.pathname.replace(/dashboard$/, '');
   return new URL(pathname, url.href).href;

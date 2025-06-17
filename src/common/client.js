@@ -85,7 +85,19 @@ export class QdrantClientExtended extends QdrantClient {
 export default function qdrantClient({ apiKey }) {
   let url;
   let port = 6333;
-  if (process.env.NODE_ENV === 'development') {
+
+  // Check for environment variable first (highest precedence)
+  if (process.env.REACT_APP_QDRANT_BASE_URL) {
+    url = process.env.REACT_APP_QDRANT_BASE_URL;
+    // Extract port from custom URL if provided
+    try {
+      const urlObj = new URL(url);
+      port = urlObj.port ? parseInt(urlObj.port) : urlObj.protocol === 'https:' ? 443 : 80;
+    } catch (e) {
+      // If URL parsing fails, use default port
+      port = 6333;
+    }
+  } else if (process.env.NODE_ENV === 'development') {
     url = 'http://localhost:6333';
   } else {
     url = getBaseURL();
