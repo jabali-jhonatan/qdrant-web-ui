@@ -279,7 +279,7 @@ export class VectorStoreService {
     }
   }
 
-  static async search(query, similarityThreshold = 0.5, topK = 10) {
+  static async search(query, similarityThreshold = 0.3, topK = 10) {
     if (!this.initialized) {
       throw new Error('VectorStoreService not initialized. Call initialize() first.');
     }
@@ -289,7 +289,7 @@ export class VectorStoreService {
       const queryEmbedding = await this.embeddingModel.getTextEmbedding(query);
 
       // Log search parameters
-      console.log('Search query embedding:', queryEmbedding);
+      console.log('Search query embedding length:', queryEmbedding.length);
       console.log('Search parameters:', {
         collection: COLLECTION_NAME,
         vector: queryEmbedding,
@@ -307,17 +307,36 @@ export class VectorStoreService {
 
       console.log('Search result:', searchResult);
 
-      // Format results
-      const results = searchResult.result.map((point) => ({
-        text: point.payload.text,
-        score: point.score,
-        metadata: {
-          file_path: point.payload.file_path,
-          chunk_index: point.payload.chunk_index,
-          ...point.payload,
-        },
-      }));
+      // Handle different response structures
+      let results = [];
 
+      if (searchResult && Array.isArray(searchResult)) {
+        // If searchResult is directly an array
+        results = searchResult.map((point) => ({
+          text: point.payload?.text || '',
+          score: point.score || 0,
+          metadata: {
+            file_path: point.payload?.file_path || '',
+            chunk_index: point.payload?.chunk_index || 0,
+            ...point.payload,
+          },
+        }));
+      } else if (searchResult && searchResult.result && Array.isArray(searchResult.result)) {
+        // If searchResult has a result property that's an array
+        results = searchResult.result.map((point) => ({
+          text: point.payload?.text || '',
+          score: point.score || 0,
+          metadata: {
+            file_path: point.payload?.file_path || '',
+            chunk_index: point.payload?.chunk_index || 0,
+            ...point.payload,
+          },
+        }));
+      } else {
+        console.warn('Unexpected search result structure:', searchResult);
+      }
+
+      console.log('Formatted search results:', results);
       return results;
     } catch (error) {
       console.error('Error searching:', error);

@@ -19,7 +19,7 @@ import PropTypes from 'prop-types';
 const SearchBar = ({ onSearch, showAdvanced = false }) => {
   const [query, setQuery] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
-  const [similarityThreshold, setSimilarityThreshold] = useState(0.5);
+  const [similarityThreshold, setSimilarityThreshold] = useState(0.3);
   const [topK, setTopK] = useState(10);
 
   const handleSearch = () => {
