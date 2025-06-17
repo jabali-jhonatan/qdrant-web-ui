@@ -4,7 +4,7 @@ import { styled } from '@mui/material/styles';
 import MuiDrawer from '@mui/material/Drawer';
 import { List, Typography, Divider, ListItem, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { LibraryBooks, Terminal, Animation, Key, RocketLaunch } from '@mui/icons-material';
+import { LibraryBooks, Terminal, Animation, Key, RocketLaunch, CloudSync } from '@mui/icons-material';
 import Tooltip from '@mui/material/Tooltip';
 import SidebarTutorialSection from './SidebarTutorialSection';
 import { useClient } from '../../context/client-context';
@@ -76,7 +76,7 @@ export default function Sidebar({ open, version, jwtEnabled, jwtVisible }) {
         )}
 
         {!isRestricted && sidebarItem('Datasets', <Animation />, '/datasets', open)}
-
+        {!isRestricted && sidebarItem('MinIO Sync', <CloudSync />, '/minio-sync', open)}
         {!isRestricted && jwtVisible && sidebarItem('Access Tokens', <Key />, '/jwt', open, jwtEnabled)}
       </List>
 

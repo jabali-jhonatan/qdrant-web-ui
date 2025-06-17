@@ -10,6 +10,7 @@ import Jwt from './pages/Jwt';
 import Graph from './pages/Graph';
 import Welcome from './pages/Welcome';
 import Homepage from './pages/Homepage';
+import MinIOSync from './pages/MinIOSync';
 
 const routes = () => [
   {
@@ -33,6 +34,7 @@ const routes = () => [
       { path: '/tutorial', element: <Tutorial /> },
       { path: '/tutorial/:pageSlug', element: <Tutorial /> },
       { path: '/jwt', element: <Jwt /> },
+      { path: '/minio-sync', element: <MinIOSync /> },
     ],
   },
 ];
