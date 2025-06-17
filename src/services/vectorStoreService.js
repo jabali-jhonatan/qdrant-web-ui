@@ -61,9 +61,32 @@ export class VectorStoreService {
 
     // Initialize vector store
     try {
-      // Check if collection exists
-      const collections = await this.qdrantClient.getCollections();
-      const collectionExists = collections.result.collections.some((col) => col.name === COLLECTION_NAME);
+      console.log('Qdrant client:', this.qdrantClient);
+
+      // Debug the available methods
+      console.log('Qdrant client methods:', Object.keys(this.qdrantClient));
+
+      // Check if collection exists - try listCollections first
+      let collections;
+      try {
+        collections = await this.qdrantClient.listCollections();
+        console.log('listCollections result:', collections);
+      } catch (e) {
+        console.log('listCollections failed, trying getCollections');
+        collections = await this.qdrantClient.getCollections();
+        console.log('getCollections result:', collections);
+      }
+
+      // Handle different response structures
+      let collectionsList = [];
+      if (collections && collections.collections) {
+        collectionsList = collections.collections;
+      } else if (collections && collections.result && collections.result.collections) {
+        collectionsList = collections.result.collections;
+      }
+
+      console.log('Collections list:', collectionsList);
+      const collectionExists = collectionsList.some((col) => col.name === COLLECTION_NAME);
 
       if (!collectionExists) {
         // Create collection with proper vector size
@@ -192,7 +215,7 @@ export class VectorStoreService {
 
     try {
       // Delete all points with matching file_path
-      await this.qdrantClient.deletePoints(COLLECTION_NAME, {
+      await this.qdrantClient.delete(COLLECTION_NAME, {
         filter: {
           must: [
             {

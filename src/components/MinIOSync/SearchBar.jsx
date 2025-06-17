@@ -136,8 +136,4 @@ SearchBar.propTypes = {
   showAdvanced: PropTypes.bool,
 };
 
-SearchBar.defaultProps = {
-  showAdvanced: false,
-};
-
 export default SearchBar;

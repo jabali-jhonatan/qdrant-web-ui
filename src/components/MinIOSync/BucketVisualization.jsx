@@ -37,7 +37,7 @@ import { MinIOService } from '../../services/minioService';
 import { VectorStoreService } from '../../services/vectorStoreService';
 import { useDropzone } from 'react-dropzone';
 
-const BucketVisualization = ({ contents, onRefresh, loading }) => {
+const BucketVisualization = ({ contents, onRefresh, loading = false }) => {
   const [currentPath, setCurrentPath] = useState('');
   const [metadataDialogOpen, setMetadataDialogOpen] = useState(false);
   const [metadata, setMetadata] = useState([{ key: '', value: '' }]);
@@ -345,10 +345,6 @@ BucketVisualization.propTypes = {
   ).isRequired,
   onRefresh: PropTypes.func.isRequired,
   loading: PropTypes.bool,
-};
-
-BucketVisualization.defaultProps = {
-  loading: false,
 };
 
 export default BucketVisualization;
