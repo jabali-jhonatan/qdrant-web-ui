@@ -90,7 +90,6 @@ const MinIOSync = () => {
 
       {activeTab === 1 && isConfigured && (
         <Box>
-          <SearchBar onSearch={handleSearch} />
           <BucketVisualization
             contents={bucketContents}
             onRefresh={loadBucketContents}

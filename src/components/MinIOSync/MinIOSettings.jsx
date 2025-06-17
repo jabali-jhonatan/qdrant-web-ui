@@ -39,9 +39,14 @@ const MinIOSettings = ({ onConfigSaved }) => {
     dimensions: 1536,
   });
 
+  const [collectionConfig, setCollectionConfig] = useState({
+    name: 'minio-documents',
+  });
+
   const [testStatus, setTestStatus] = useState({
     minio: null,
     embedding: null,
+    collection: null,
   });
 
   const [error, setError] = useState('');
@@ -50,6 +55,7 @@ const MinIOSettings = ({ onConfigSaved }) => {
     // Load saved configurations
     const savedMinioConfig = MinIOService.getConfig();
     const savedEmbeddingConfig = VectorStoreService.getEmbeddingConfig();
+    const savedCollectionConfig = VectorStoreService.getCollectionConfig();
 
     if (savedMinioConfig) {
       setMinioConfig(savedMinioConfig);
@@ -57,6 +63,10 @@ const MinIOSettings = ({ onConfigSaved }) => {
 
     if (savedEmbeddingConfig) {
       setEmbeddingConfig(savedEmbeddingConfig);
+    }
+
+    if (savedCollectionConfig) {
+      setCollectionConfig(savedCollectionConfig);
     }
   }, []);
 
@@ -71,6 +81,13 @@ const MinIOSettings = ({ onConfigSaved }) => {
     setEmbeddingConfig({
       ...embeddingConfig,
       [field]: field === 'dimensions' ? parseInt(event.target.value) || 0 : event.target.value,
+    });
+  };
+
+  const handleCollectionChange = (field) => (event) => {
+    setCollectionConfig({
+      ...collectionConfig,
+      [field]: event.target.value,
     });
   };
 
@@ -103,6 +120,7 @@ const MinIOSettings = ({ onConfigSaved }) => {
       // Save configurations
       MinIOService.saveConfig(minioConfig);
       VectorStoreService.saveEmbeddingConfig(embeddingConfig);
+      VectorStoreService.saveCollectionConfig(collectionConfig);
 
       // Initialize services
       await MinIOService.initialize();
@@ -272,6 +290,24 @@ const MinIOSettings = ({ onConfigSaved }) => {
         </Grid>
       </Paper>
 
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          Qdrant Collection Configuration
+        </Typography>
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <TextField
+              label="Collection Name"
+              value={collectionConfig.name}
+              onChange={handleCollectionChange('name')}
+              fullWidth
+              placeholder="minio-documents"
+              helperText="Name of the Qdrant collection to store document vectors"
+            />
+          </Grid>
+        </Grid>
+      </Paper>
+
       <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
         <Button
           variant="contained"
@@ -281,7 +317,8 @@ const MinIOSettings = ({ onConfigSaved }) => {
             !minioConfig.endPoint ||
             !minioConfig.bucketName ||
             !embeddingConfig.apiKey ||
-            !embeddingConfig.model
+            !embeddingConfig.model ||
+            !collectionConfig.name
           }
         >
           Save Configuration

@@ -133,6 +133,40 @@ export class MinIOService {
     }
   }
 
+  static async downloadObject(key, filename) {
+    if (!this.client) {
+      await this.initialize();
+    }
+
+    try {
+      const objectData = await this.getObject(key);
+
+      // Create a blob and download it
+      const blob = new Blob([objectData.content], {
+        type: objectData.contentType || 'text/plain',
+      });
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename || key.split('/').pop();
+
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      return true;
+    } catch (error) {
+      console.error('Error downloading object:', error);
+      throw error;
+    }
+  }
+
   static async uploadObject(key, content, metadata = {}) {
     if (!this.client) {
       await this.initialize();

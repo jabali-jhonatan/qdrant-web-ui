@@ -26,6 +26,7 @@ import {
   Folder,
   InsertDriveFile,
   Delete,
+  Download,
   Refresh,
   CloudUpload,
   NavigateNext,
@@ -114,6 +115,14 @@ const BucketVisualization = ({ contents, onRefresh, loading = false }) => {
       } catch (error) {
         console.error('Error deleting file:', error);
       }
+    }
+  };
+
+  const handleDownload = async (item) => {
+    try {
+      await MinIOService.downloadObject(item.key, item.name);
+    } catch (error) {
+      console.error('Error downloading file:', error);
     }
   };
 
@@ -277,6 +286,11 @@ const BucketVisualization = ({ contents, onRefresh, loading = false }) => {
                   />
                   {item.type === 'file' && (
                     <ListItemSecondaryAction>
+                      <Tooltip title="Download">
+                        <IconButton onClick={() => handleDownload(item)}>
+                          <Download />
+                        </IconButton>
+                      </Tooltip>
                       <Tooltip title="Delete">
                         <IconButton edge="end" onClick={() => handleDelete(item)}>
                           <Delete />

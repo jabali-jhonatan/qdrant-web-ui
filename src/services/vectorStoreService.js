@@ -2,8 +2,9 @@ import { Document, Settings, SimpleNodeParser } from 'llamaindex';
 import { OpenAIEmbedding } from '@llamaindex/openai';
 
 const EMBEDDING_CONFIG_KEY = 'embedding-config';
-const COLLECTION_NAME = 'minio-documents';
+const COLLECTION_CONFIG_KEY = 'collection-config';
 const BUCKET_METADATA_KEY = 'bucket-metadata';
+const DEFAULT_COLLECTION_NAME = 'minio-documents';
 
 export class VectorStoreService {
   static embeddingModel = null;
@@ -17,6 +18,20 @@ export class VectorStoreService {
 
   static saveEmbeddingConfig(config) {
     localStorage.setItem(EMBEDDING_CONFIG_KEY, JSON.stringify(config));
+  }
+
+  static getCollectionConfig() {
+    const stored = localStorage.getItem(COLLECTION_CONFIG_KEY);
+    return stored ? JSON.parse(stored) : { name: DEFAULT_COLLECTION_NAME };
+  }
+
+  static saveCollectionConfig(config) {
+    localStorage.setItem(COLLECTION_CONFIG_KEY, JSON.stringify(config));
+  }
+
+  static getCollectionName() {
+    const config = this.getCollectionConfig();
+    return config.name || DEFAULT_COLLECTION_NAME;
   }
 
   static getBucketMetadata(bucketName) {
@@ -86,11 +101,12 @@ export class VectorStoreService {
       }
 
       console.log('Collections list:', collectionsList);
-      const collectionExists = collectionsList.some((col) => col.name === COLLECTION_NAME);
+      const currentCollectionName = this.getCollectionName();
+      const collectionExists = collectionsList.some((col) => col.name === currentCollectionName);
 
       if (!collectionExists) {
         // Create collection with proper vector size
-        await this.qdrantClient.createCollection(COLLECTION_NAME, {
+        await this.qdrantClient.createCollection(currentCollectionName, {
           vectors: {
             size: config.dimensions || 1536,
             distance: 'Cosine',
@@ -220,7 +236,8 @@ export class VectorStoreService {
 
       // Try a simpler upsert approach
       try {
-        const result = await this.qdrantClient.upsert(COLLECTION_NAME, {
+        const collectionName = this.getCollectionName();
+        const result = await this.qdrantClient.upsert(collectionName, {
           points: formattedPoints,
         });
         console.log('Upsert result:', result);
@@ -232,7 +249,8 @@ export class VectorStoreService {
         for (let i = 0; i < formattedPoints.length; i++) {
           const singlePoint = formattedPoints[i];
           try {
-            await this.qdrantClient.upsert(COLLECTION_NAME, {
+            const collectionName = this.getCollectionName();
+            await this.qdrantClient.upsert(collectionName, {
               points: [singlePoint],
             });
             console.log(`Successfully uploaded point ${i}`);
@@ -261,7 +279,8 @@ export class VectorStoreService {
 
     try {
       // Delete all points with matching file_path
-      await this.qdrantClient.delete(COLLECTION_NAME, {
+      const collectionName = this.getCollectionName();
+      await this.qdrantClient.delete(collectionName, {
         filter: {
           must: [
             {
@@ -289,16 +308,17 @@ export class VectorStoreService {
       const queryEmbedding = await this.embeddingModel.getTextEmbedding(query);
 
       // Log search parameters
+      const collectionName = this.getCollectionName();
       console.log('Search query embedding length:', queryEmbedding.length);
       console.log('Search parameters:', {
-        collection: COLLECTION_NAME,
+        collection: collectionName,
         vector: queryEmbedding,
         limit: topK,
         score_threshold: similarityThreshold,
       });
 
       // Search in Qdrant
-      const searchResult = await this.qdrantClient.search(COLLECTION_NAME, {
+      const searchResult = await this.qdrantClient.search(collectionName, {
         vector: queryEmbedding,
         limit: topK,
         score_threshold: similarityThreshold,
