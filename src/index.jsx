@@ -6,6 +6,7 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { HashRouter } from 'react-router-dom';
 import { ClientProvider } from './context/client-context';
+import { MinioProvider } from './context/minio-context';
 import { SnackbarProvider, closeSnackbar } from 'notistack';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -13,6 +14,7 @@ root.render(
   <React.StrictMode>
     <HashRouter>
       <ClientProvider>
+        <MinioProvider>
         <SnackbarProvider
           anchorOrigin={{
             vertical: 'top',
@@ -33,6 +35,7 @@ root.render(
         >
           <App />
         </SnackbarProvider>
+        </MinioProvider>
       </ClientProvider>
     </HashRouter>
   </React.StrictMode>

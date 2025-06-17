@@ -6,6 +6,7 @@ import Collection from './pages/Collection';
 import Visualize from './pages/Visualize';
 import Tutorial from './pages/Tutorial';
 import Datasets from './pages/Datasets';
+import MinioSync from './pages/MinioSync';
 import Jwt from './pages/Jwt';
 import Graph from './pages/Graph';
 import Welcome from './pages/Welcome';
@@ -20,6 +21,7 @@ const routes = () => [
       { path: '/welcome', element: <Welcome /> },
       { path: '/console', element: <Console /> },
       { path: '/datasets', element: <Datasets /> },
+      { path: '/minio-sync', element: <MinioSync /> },
       { path: '/collections', element: <Collections /> },
       { path: '/collections/:collectionName', element: <Collection /> },
       {
