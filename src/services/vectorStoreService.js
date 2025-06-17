@@ -193,10 +193,56 @@ export class VectorStoreService {
         });
       }
 
-      // Upsert points to Qdrant
-      await this.qdrantClient.upsert(COLLECTION_NAME, {
-        points,
+      // Upsert points to Qdrant - try to log the request first
+      console.log('Number of nodes to upload:', nodes.length);
+      console.log('Sample embedding length:', points[0]?.vector?.length);
+      console.log('Sample payload:', points[0]?.payload);
+
+      // Format the points array correctly for Qdrant
+      const formattedPoints = points.map((point, index) => {
+        // Use simple integer IDs
+        const pointId = Date.now() + index;
+
+        console.log(`Point ${index}:`, {
+          id: pointId,
+          vectorLength: point.vector.length,
+          payloadKeys: Object.keys(point.payload),
+        });
+
+        return {
+          id: pointId,
+          vector: point.vector,
+          payload: point.payload,
+        };
       });
+
+      console.log('Formatted points for upload:', formattedPoints);
+
+      // Try a simpler upsert approach
+      try {
+        const result = await this.qdrantClient.upsert(COLLECTION_NAME, {
+          points: formattedPoints,
+        });
+        console.log('Upsert result:', result);
+      } catch (upsertError) {
+        console.error('Upsert error details:', upsertError);
+
+        // Try alternative approach - upload one point at a time
+        console.log('Trying to upload points one by one...');
+        for (let i = 0; i < formattedPoints.length; i++) {
+          const singlePoint = formattedPoints[i];
+          try {
+            await this.qdrantClient.upsert(COLLECTION_NAME, {
+              points: [singlePoint],
+            });
+            console.log(`Successfully uploaded point ${i}`);
+          } catch (singleError) {
+            console.error(`Error uploading point ${i}:`, singleError);
+            console.error('Point data:', singlePoint);
+            throw singleError;
+          }
+        }
+      }
 
       return {
         success: true,
@@ -242,12 +288,24 @@ export class VectorStoreService {
       // Get query embedding
       const queryEmbedding = await this.embeddingModel.getTextEmbedding(query);
 
+      // Log search parameters
+      console.log('Search query embedding:', queryEmbedding);
+      console.log('Search parameters:', {
+        collection: COLLECTION_NAME,
+        vector: queryEmbedding,
+        limit: topK,
+        score_threshold: similarityThreshold,
+      });
+
       // Search in Qdrant
       const searchResult = await this.qdrantClient.search(COLLECTION_NAME, {
         vector: queryEmbedding,
         limit: topK,
         score_threshold: similarityThreshold,
+        with_payload: true, // Ensure payload is returned
       });
+
+      console.log('Search result:', searchResult);
 
       // Format results
       const results = searchResult.result.map((point) => ({
