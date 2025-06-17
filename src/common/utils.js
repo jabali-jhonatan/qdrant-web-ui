@@ -1,7 +1,7 @@
 export const getBaseURL = function () {
   // Check for environment variable first (highest precedence)
-  if (process.env.REACT_APP_QDRANT_BASE_URL) {
-    return process.env.REACT_APP_QDRANT_BASE_URL;
+  if (import.meta.env.VITE_QDRANT_BASE_URL) {
+    return import.meta.env.VITE_QDRANT_BASE_URL;
   }
 
   // Fall back to existing logic

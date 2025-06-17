@@ -4,12 +4,12 @@ import { bigIntJSON } from './bigIntJSON';
 
 function getQdrantBaseURL() {
   // Check for environment variable first (highest precedence)
-  if (process.env.REACT_APP_QDRANT_BASE_URL) {
-    return process.env.REACT_APP_QDRANT_BASE_URL;
+  if (import.meta.env.VITE_QDRANT_BASE_URL) {
+    return import.meta.env.VITE_QDRANT_BASE_URL;
   }
 
   // Fall back to existing logic
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.env.MODE === 'development') {
     return 'http://localhost:6333';
   } else {
     return getBaseURL();

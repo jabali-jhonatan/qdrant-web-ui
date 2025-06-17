@@ -87,8 +87,8 @@ export default function qdrantClient({ apiKey }) {
   let port = 6333;
 
   // Check for environment variable first (highest precedence)
-  if (process.env.REACT_APP_QDRANT_BASE_URL) {
-    url = process.env.REACT_APP_QDRANT_BASE_URL;
+  if (import.meta.env.VITE_QDRANT_BASE_URL) {
+    url = import.meta.env.VITE_QDRANT_BASE_URL;
     // Extract port from custom URL if provided
     try {
       const urlObj = new URL(url);
@@ -97,7 +97,7 @@ export default function qdrantClient({ apiKey }) {
       // If URL parsing fails, use default port
       port = 6333;
     }
-  } else if (process.env.NODE_ENV === 'development') {
+  } else if (import.meta.env.MODE === 'development') {
     url = 'http://localhost:6333';
   } else {
     url = getBaseURL();
