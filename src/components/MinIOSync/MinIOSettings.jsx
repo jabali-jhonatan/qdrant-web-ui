@@ -9,6 +9,8 @@ import {
   Alert,
   IconButton,
   InputAdornment,
+  FormControlLabel,
+  Switch,
 } from '@mui/material';
 import { Visibility, VisibilityOff, Save } from '@mui/icons-material';
 import PropTypes from 'prop-types';
@@ -71,10 +73,30 @@ const MinIOSettings = ({ onConfigSaved }) => {
   }, []);
 
   const handleMinioChange = (field) => (event) => {
-    setMinioConfig({
-      ...minioConfig,
-      [field]: field === 'port' ? parseInt(event.target.value) || 0 : event.target.value,
-    });
+    let value = field === 'port'
+      ? parseInt(event.target.value) || 0
+      : field === 'useSSL'
+        ? event.target.checked
+        : event.target.value;
+
+    // Clean up endpoint - remove protocol if accidentally included
+    if (field === 'endPoint' && typeof value === 'string') {
+      value = value.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    }
+
+    // Auto-adjust port when SSL is toggled
+    if (field === 'useSSL') {
+      setMinioConfig({
+        ...minioConfig,
+        [field]: value,
+        port: value ? 443 : 9000,
+      });
+    } else {
+      setMinioConfig({
+        ...minioConfig,
+        [field]: value,
+      });
+    }
   };
 
   const handleEmbeddingChange = (field) => (event) => {
@@ -159,7 +181,7 @@ const MinIOSettings = ({ onConfigSaved }) => {
               onChange={handleMinioChange('endPoint')}
               fullWidth
               placeholder="localhost or minio.example.com"
-              helperText="MinIO server endpoint without protocol"
+              helperText="MinIO server endpoint WITHOUT protocol (e.g., minio-api.conectbria.com, not https://minio-api.conectbria.com)"
             />
           </Grid>
           <Grid item xs={12} md={4}>
@@ -205,6 +227,18 @@ const MinIOSettings = ({ onConfigSaved }) => {
               onChange={handleMinioChange('bucketName')}
               fullWidth
               placeholder="my-bucket"
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={minioConfig.useSSL}
+                  onChange={handleMinioChange('useSSL')}
+                  color="primary"
+                />
+              }
+              label="Use SSL/TLS (HTTPS)"
             />
           </Grid>
           <Grid item xs={12}>
