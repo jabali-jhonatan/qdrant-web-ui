@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   TextField,
@@ -13,18 +13,40 @@ import {
   InputLabel,
   OutlinedInput,
 } from '@mui/material';
-import { Search, Clear, ExpandMore, ExpandLess } from '@mui/icons-material';
+import { Search, Clear, ExpandMore, ExpandLess, Add, Remove } from '@mui/icons-material';
 import PropTypes from 'prop-types';
+import { MinIOService } from '../../services/minioService';
+import { VectorStoreService } from '../../services/vectorStoreService';
 
 const SearchBar = ({ onSearch, showAdvanced = false }) => {
   const [query, setQuery] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const [similarityThreshold, setSimilarityThreshold] = useState(0.3);
   const [topK, setTopK] = useState(10);
+  const [metadataFilters, setMetadataFilters] = useState([{ key: '', value: '' }]);
+
+  useEffect(() => {
+    // Load bucket metadata from localStorage to show as hints
+    const config = MinIOService.getConfig();
+    if (config && config.bucketName) {
+      const savedMetadata = VectorStoreService.getBucketMetadata(config.bucketName);
+      if (savedMetadata && Object.keys(savedMetadata).length > 0) {
+        const metadataArray = Object.entries(savedMetadata).map(([key, value]) => ({ key, value }));
+        setMetadataFilters(metadataArray);
+      }
+    }
+  }, []);
 
   const handleSearch = () => {
     if (query.trim()) {
-      onSearch(query, similarityThreshold, topK);
+      // Filter out empty metadata entries
+      const activeFilters = metadataFilters.filter(f => f.key && f.value);
+      const metadataFilter = activeFilters.reduce((acc, filter) => {
+        acc[filter.key] = filter.value;
+        return acc;
+      }, {});
+
+      onSearch(query, similarityThreshold, topK, metadataFilter);
     }
   };
 
@@ -36,6 +58,22 @@ const SearchBar = ({ onSearch, showAdvanced = false }) => {
     if (e.key === 'Enter') {
       handleSearch();
     }
+  };
+
+  const handleMetadataAdd = () => {
+    setMetadataFilters([...metadataFilters, { key: '', value: '' }]);
+  };
+
+  const handleMetadataRemove = (index) => {
+    if (metadataFilters.length > 1) {
+      setMetadataFilters(metadataFilters.filter((_, i) => i !== index));
+    }
+  };
+
+  const handleMetadataChange = (index, field, value) => {
+    const newFilters = [...metadataFilters];
+    newFilters[index][field] = value;
+    setMetadataFilters(newFilters);
   };
 
   return (
@@ -123,6 +161,48 @@ const SearchBar = ({ onSearch, showAdvanced = false }) => {
                   Maximum number of results to return (1-100)
                 </Typography>
               </FormControl>
+
+              <Box sx={{ mt: 3 }}>
+                <Typography variant="body2" gutterBottom>
+                  Metadata Filters
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                  Filter results by metadata fields (only documents matching all filters will be returned)
+                </Typography>
+                {metadataFilters.map((filter, index) => (
+                  <Box key={index} sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                    <TextField
+                      label="Key"
+                      value={filter.key}
+                      onChange={(e) => handleMetadataChange(index, 'key', e.target.value)}
+                      size="small"
+                      sx={{ flex: 1 }}
+                    />
+                    <TextField
+                      label="Value"
+                      value={filter.value}
+                      onChange={(e) => handleMetadataChange(index, 'value', e.target.value)}
+                      size="small"
+                      sx={{ flex: 1 }}
+                    />
+                    <IconButton
+                      onClick={() => handleMetadataRemove(index)}
+                      disabled={metadataFilters.length === 1}
+                      size="small"
+                    >
+                      <Remove />
+                    </IconButton>
+                  </Box>
+                ))}
+                <Button
+                  startIcon={<Add />}
+                  onClick={handleMetadataAdd}
+                  size="small"
+                  sx={{ mt: 1 }}
+                >
+                  Add Filter
+                </Button>
+              </Box>
             </Box>
           </Collapse>
         )}

@@ -298,7 +298,7 @@ export class VectorStoreService {
     }
   }
 
-  static async search(query, similarityThreshold = 0.3, topK = 10) {
+  static async search(query, similarityThreshold = 0.3, topK = 10, metadataFilter = {}) {
     if (!this.initialized) {
       throw new Error('VectorStoreService not initialized. Call initialize() first.');
     }
@@ -306,6 +306,17 @@ export class VectorStoreService {
     try {
       // Get query embedding
       const queryEmbedding = await this.embeddingModel.getTextEmbedding(query);
+
+      // Build filter conditions for metadata
+      const filterConditions = [];
+      if (metadataFilter && Object.keys(metadataFilter).length > 0) {
+        for (const [key, value] of Object.entries(metadataFilter)) {
+          filterConditions.push({
+            key: key,
+            match: { value: value },
+          });
+        }
+      }
 
       // Log search parameters
       const collectionName = this.getCollectionName();
@@ -315,15 +326,26 @@ export class VectorStoreService {
         vector: queryEmbedding,
         limit: topK,
         score_threshold: similarityThreshold,
+        filter: filterConditions.length > 0 ? { must: filterConditions } : undefined,
       });
 
-      // Search in Qdrant
-      const searchResult = await this.qdrantClient.search(collectionName, {
+      // Build search request
+      const searchRequest = {
         vector: queryEmbedding,
         limit: topK,
         score_threshold: similarityThreshold,
         with_payload: true, // Ensure payload is returned
-      });
+      };
+
+      // Add filter if metadata conditions exist
+      if (filterConditions.length > 0) {
+        searchRequest.filter = {
+          must: filterConditions,
+        };
+      }
+
+      // Search in Qdrant
+      const searchResult = await this.qdrantClient.search(collectionName, searchRequest);
 
       console.log('Search result:', searchResult);
 

@@ -56,9 +56,9 @@ const MinIOSync = () => {
     }
   };
 
-  const handleSearch = async (query, similarityThreshold, topK) => {
+  const handleSearch = async (query, similarityThreshold, topK, metadataFilter) => {
     try {
-      const results = await VectorStoreService.search(query, similarityThreshold, topK);
+      const results = await VectorStoreService.search(query, similarityThreshold, topK, metadataFilter);
       setSearchResults(results);
     } catch (error) {
       console.error('Error searching:', error);
