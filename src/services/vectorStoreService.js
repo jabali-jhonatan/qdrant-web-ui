@@ -182,7 +182,7 @@ export class VectorStoreService {
 
       // Parse document into nodes
       const nodeParser = new SimpleNodeParser({
-        chunkSize: 512,
+        chunkSize: 1024,
         chunkOverlap: 50,
       });
 
